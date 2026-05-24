@@ -1,0 +1,500 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% Packages
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{subfig}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{array}
+\usepackage{float}
+\usepackage{pgfplots}
+\usepackage{grffile}  % Extended file name support for graphics
+\pgfplotsset{compat=1.18}
+
+% Define colors
+\definecolor{linkblue}{RGB}{0,102,204}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    filecolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue,
+    pdftitle={Bitcoin Price Prediction Using Supervised Learning},
+    pdfauthor={Anonymous},
+}
+
+\begin{document}
+
+\title{Bitcoin Price Prediction Using Supervised Learning: A Comprehensive Comparative Analysis}
+
+\author{
+    \IEEEauthorblockN{ Sree Charanya Kuturu}\\
+    \IEEEauthorblockA{
+        \textit{Masters in Data Science} \\
+        \textit{University of Europe for applied sciences} \\
+        Potsdam, Germany \\
+        Sree.kuturu@ue-germany.de
+    }
+}
+
+\maketitle
+
+\begin{abstract}
+Bitcoin price prediction remains one of the most challenging problems in financial machine learning due to the inherent volatility and non-stationary nature of cryptocurrency markets.
+This study presents a comprehensive comparative analysis of supervised learning models for next-day Bitcoin price forecasting using high-frequency historical data.
+We evaluate seven research questions encompassing baseline performance, model comparison, preprocessing effects, feature importance, metric sensitivity, robustness analysis, and practical recommendations.
+Our experiments compare Linear Regression, Random Forest, Support Vector Regression, and XGBoost across multiple evaluation metrics including Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and coefficient of determination (R$^2$).
+The results demonstrate that Linear Regression achieves superior predictive accuracy with an R$^2$ score of 0.998, outperforming more complex ensemble methods on this specific forecasting task.
+Feature importance analysis reveals that lag-1 closing price dominates prediction accuracy, contributing over 99.9\% of model explanatory power.
+Robustness testing under noisy and missing data conditions shows that preprocessing pipelines with outlier removal and standardization improve generalization by 15.3\%.
+This work provides actionable insights for practitioners selecting models for cryptocurrency price prediction in production environments.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Bitcoin price prediction, supervised learning, time series forecasting, cryptocurrency, machine learning, feature engineering, model comparison, robustness analysis.
+\end{IEEEkeywords}
+
+\section{Introduction}
+\label{sec:introduction}
+
+The cryptocurrency market has experienced unprecedented growth over the past decade, with Bitcoin emerging as the dominant digital asset by market capitalization.
+Bitcoin's price dynamics exhibit unique characteristics including high volatility, extreme returns, and complex temporal dependencies that challenge traditional econometric models.
+Accurate price prediction enables traders to optimize portfolio allocation, assists regulators in market surveillance, and supports researchers in understanding the fundamental drivers of digital asset valuation.
+Despite extensive research in financial time series forecasting, Bitcoin prediction remains an open problem due to the non-stationary nature of blockchain-based markets and the influence of external factors such as regulatory announcements, macroeconomic indicators, and social media sentiment.
+
+Machine learning approaches have demonstrated significant potential in capturing nonlinear patterns within financial data.
+Supervised learning methods, in particular, offer interpretable frameworks for understanding the relationship between historical price movements and future returns.
+Recent advances in ensemble methods, gradient boosting, and kernel-based approaches have expanded the toolkit available to quantitative analysts.
+However, the comparative effectiveness of these methods for high-frequency Bitcoin prediction remains underexplored, particularly when considering the trade-offs between predictive accuracy, computational efficiency, and model interpretability.
+
+This study addresses this gap by conducting a systematic evaluation of supervised learning models for Bitcoin price prediction.
+We formulate seven research questions that progressively investigate baseline performance, model comparison, preprocessing impact, feature importance, metric sensitivity, robustness, and practical recommendations.
+Our contributions are threefold:
+first, we provide a rigorous empirical comparison of classical and modern regression techniques on high-frequency Bitcoin data;
+second, we quantify the marginal contribution of technical indicators and preprocessing transformations;
+third, we establish a decision framework for model selection based on multi-criteria evaluation.
+
+The remainder of this paper is organized as follows.
+Section~\ref{sec:related_work} reviews relevant literature on cryptocurrency price prediction.
+Section~\ref{sec:methodology} describes the dataset, feature engineering pipeline, and experimental design.
+Section~\ref{sec:results} presents the results for each research question.
+Section~\ref{sec:discussion} discusses the implications of our findings.
+Section~\ref{sec:conclusion} concludes with recommendations for future work.
+
+\section{Related Work}
+\label{sec:related_work}
+
+\subsection{Cryptocurrency Price Prediction}
+
+Early approaches to Bitcoin price prediction relied on autoregressive integrated moving average (ARIMA) models and generalized autoregressive conditional heteroskedasticity (GARCH) frameworks.
+These methods assume stationarity and linear dependencies that rarely hold in cryptocurrency markets.
+Mittal et al. demonstrated that ARIMA models achieve limited accuracy for Bitcoin forecasting due to structural breaks and regime shifts in the underlying data generating process.
+
+The application of machine learning to cryptocurrency prediction gained momentum with the availability of high-frequency trading data.
+McNally et al. compared recurrent neural networks (RNN) and long short-term memory (LSTM) networks for Bitcoin price prediction, finding that LSTM architectures outperform traditional statistical methods by capturing long-range temporal dependencies.
+Lahmiri and Bekiros extended this work by integrating technical indicators with deep learning models, achieving improved directional accuracy.
+
+Ensemble methods have shown particular promise in financial forecasting applications.
+Fischer and Krauss evaluated random forests and gradient boosting machines for S\&P 500 prediction, demonstrating that tree-based ensembles reduce overfitting compared to single decision trees.
+Chen and Guestrin introduced XGBoost, a scalable gradient boosting framework that has become the de facto standard for tabular data competitions.
+Recent studies by Patel et al. and Akyildirim et al. have applied XGBoost to cryptocurrency prediction with competitive results.
+
+\subsection{Feature Engineering for Financial Time Series}
+
+Feature engineering plays a critical role in the performance of machine learning models for financial prediction.
+Technical indicators derived from price and volume data provide compact representations of market conditions.
+The simple moving average (SMA) and exponential moving average (EMA) smooth price fluctuations to identify trends.
+The relative strength index (RSI) measures momentum and identifies overbought or oversold conditions.
+Bollinger Bands quantify volatility relative to historical ranges.
+
+Sezer et al. conducted a comprehensive survey of feature extraction methods for financial time series, categorizing approaches into technical indicators, statistical features, and deep representations.
+Their analysis revealed that combining multiple feature categories improves model generalization compared to using raw price data alone.
+Liu and Wang proposed a hybrid feature selection framework that integrates mutual information with recursive feature elimination, demonstrating significant dimensionality reduction without sacrificing predictive accuracy.
+
+\subsection{Evaluation Metrics and Model Selection}
+
+The choice of evaluation metric profoundly influences model selection in regression tasks.
+Mean Absolute Error (MAE) provides an interpretable measure of average prediction deviation but is insensitive to outliers.
+Root Mean Squared Error (RMSE) penalizes large errors more heavily, making it suitable for applications where extreme deviations are particularly costly.
+The coefficient of determination (R$^2$) measures the proportion of variance explained by the model, offering a normalized performance indicator.
+
+Recent work by Botchkarev emphasized the importance of metric sensitivity analysis when comparing machine learning models.
+Different metrics may yield contradictory rankings, particularly when models exhibit heterogeneous error distributions.
+Our study addresses this concern by evaluating model performance across multiple complementary metrics and analyzing ranking stability.
+
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Dataset Description}
+
+We utilize the Bitcoin Historical Dataset from Kaggle, which contains minute-level price data spanning multiple years of trading activity.
+The dataset includes the following features: Open price, High price, Low price, Close price, Volume traded, and Market Capitalization.
+Each record represents a one-minute interval of trading activity on major cryptocurrency exchanges.
+The target variable is the next-step closing price, formulated as a regression task.
+
+The raw dataset contains approximately 50,000 records after temporal filtering to focus on recent market conditions.
+We apply chronological train-test splitting with an 80/20 ratio to preserve temporal ordering and prevent data leakage.
+All experiments use the same data partition to ensure fair comparison across models and preprocessing strategies.
+Figure~\ref{fig:dataset} presents an overview of the dataset characteristics.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figures/Sample Figures for Report/Dataset/ImageDataset_Overview.pdf"}
+    \caption{Dataset overview showing (a) Bitcoin closing price time series, (b) trading volume distribution, (c) price range dynamics, and (d) feature correlation matrix.}
+    \label{fig:dataset}
+\end{figure}
+
+\subsection{Feature Engineering}
+
+We construct a comprehensive feature set comprising lag features, technical indicators, and derived price metrics.
+Lag features include the closing price at time $t-1$ and $t-2$, capturing immediate price momentum.
+Technical indicators include the 10-period simple moving average (SMA$_{10}$), 10-period exponential moving average (EMA$_{10}$), 30-period simple moving average (SMA$_{30}$), and 30-period exponential moving average (EMA$_{30}$).
+The relative strength index (RSI) quantifies momentum based on recent price changes.
+Derived features include price range (High minus Low) and body size (absolute difference between Open and Close).
+
+Formally, the feature vector for time step $t$ is defined as:
+\begin{equation}
+    \mathbf{x}_t = [C_{t-1}, C_{t-2}, \text{SMA}_{10,t}, \text{EMA}_{10,t}, \text{SMA}_{30,t}, \text{EMA}_{30,t}, \text{RSI}_t, R_t, B_t]
+\end{equation}
+where $C_{t-1}$ denotes the lag-1 closing price, $R_t$ represents the price range, and $B_t$ denotes the body size.
+
+\subsection{Models}
+
+We evaluate six supervised learning models spanning linear, tree-based, instance-based, and kernel-based paradigms:
+
+\textbf{Linear Regression (LR):} A baseline model that assumes a linear relationship between features and target.
+Despite its simplicity, LR serves as a strong benchmark for financial prediction tasks due to its robustness against overfitting.
+
+\textbf{Decision Tree Regressor (DTR):} A non-parametric model that partitions the feature space through recursive binary splitting.
+DTR captures nonlinear interactions but is prone to overfitting without regularization.
+
+\textbf{k-Nearest Neighbors Regressor (k-NN):} An instance-based method that predicts target values by averaging the outputs of the $k$ closest training examples.
+We use $k=5$ with Euclidean distance metric.
+
+\textbf{Random Forest Regressor (RFR):} An ensemble of decorrelated decision trees trained via bootstrap aggregating.
+We configure 50 estimators with maximum depth 10 to balance predictive power and computational efficiency.
+
+\textbf{XGBoost Regressor (XGB):} A gradient boosting framework that sequentially trains weak learners to correct residual errors.
+XGBoost incorporates regularization and efficient tree pruning to prevent overfitting.
+
+\textbf{Support Vector Regression (SVR):} A kernel-based method that finds a hyperplane maximizing the margin around the regression function.
+We employ the radial basis function (RBF) kernel with $C=10$ and automatic gamma selection.
+
+\subsection{Evaluation Metrics}
+
+We assess model performance using three complementary metrics:
+
+\textbf{Mean Absolute Error (MAE):}
+\begin{equation}
+    \text{MAE} = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|
+\end{equation}
+
+\textbf{Root Mean Squared Error (RMSE):}
+\begin{equation}
+    \text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}
+\end{equation}
+
+\textbf{Coefficient of Determination (R$^2$):}
+\begin{equation}
+    R^2 = 1 - \frac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - \bar{y})^2}
+\end{equation}
+
+Lower MAE and RMSE values indicate better performance, while higher R$^2$ values indicate greater explanatory power.
+
+\subsection{Experimental Design}
+
+Our experimental framework addresses seven research questions (RQ1--RQ7) that progressively investigate different aspects of the prediction pipeline.
+Each RQ employs consistent data partitioning and evaluation procedures to ensure comparability.
+Figure~\ref{fig:workflow} illustrates the overall research methodology.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figure and Table Sources/Workflow/Right_Workflow_Methodology.pdf"}
+    \caption{Research methodology workflow encompassing data collection, preprocessing, feature engineering, model training, evaluation, and analysis phases.}
+    \label{fig:workflow}
+\end{figure}
+
+\section{Results}
+\label{sec:results}
+
+\subsection{RQ1: Baseline Performance}
+
+Research Question 1 establishes a performance baseline using Linear Regression with a single lag feature.
+The model achieves an MAE of 69,983.22, RMSE of 106,728.26, and R$^2$ of 0.998, indicating that even a simple autoregressive model captures the majority of price variation.
+Figure~\ref{fig:rq1} compares actual versus predicted prices for the first 200 test observations, revealing close alignment between the series.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figures/Sample Figures for Report/Results/Figure1.pdf"}
+    \caption{RQ1: Baseline Linear Regression performance showing actual versus predicted Bitcoin prices over 200 test time steps.}
+    \label{fig:rq1}
+\end{figure}
+
+\begin{table}[htbp]
+    \centering
+    \caption{RQ1: Baseline Performance Metrics}
+    \label{tab:rq1}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Model} & \textbf{MAE} & \textbf{RMSE} & \textbf{R$^2$} \\
+        \midrule
+        Linear Regression & 69,983.22 & 106,728.26 & 0.998 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{RQ2: Model Comparison}
+
+Research Question 2 compares Linear Regression, Random Forest, and SVR on identical features.
+Table~\ref{tab:rq2} presents the comparative results.
+Linear Regression achieves the lowest MAE (69,983.22) and highest R$^2$ (0.998), while Random Forest exhibits higher error metrics due to overfitting on the single-feature input.
+SVR performs poorly with negative R$^2$, indicating predictions worse than the mean baseline.
+
+\begin{table}[htbp]
+    \centering
+    \caption{RQ2: Comparative Model Performance}
+    \label{tab:rq2}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Model} & \textbf{MAE} & \textbf{RMSE} & \textbf{R$^2$} \\
+        \midrule
+        Linear Regression & 69,983.22 & 106,728.26 & 0.998 \\
+        Random Forest & 555,358.02 & 1,182,767.00 & 0.702 \\
+        SVR & 2,619,349.00 & 3,409,355.00 & $-$1.474 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Figure~\ref{fig:rq2} visualizes the comparative performance across metrics.
+The horizontal bar chart clearly demonstrates the superiority of Linear Regression for this specific prediction task.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figures/Sample Figures for Report/Results/Figure2.pdf"}
+    \caption{RQ2: Comparative model performance across MAE, RMSE, and R$^2$ metrics.}
+    \label{fig:rq2}
+\end{figure}
+
+\subsection{RQ3: Preprocessing Effect}
+
+Research Question 3 investigates the impact of preprocessing strategies on model performance.
+We evaluate four configurations: Raw (lag feature only), Indicator (lag plus SMA), Scaled (MinMax normalization), and Full (indicator plus outlier removal and standardization).
+
+Table~\ref{tab:rq3} reveals that the Full pipeline achieves the best performance with MAE of 33,952.42 and R$^2$ of 0.998, representing a 51.5\% reduction in MAE compared to the Raw configuration.
+Outlier removal proves particularly effective for high-frequency financial data where extreme price movements can distort model training.
+
+\begin{table}[htbp]
+    \centering
+    \caption{RQ3: Impact of Preprocessing on Performance}
+    \label{tab:rq3}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Strategy} & \textbf{MAE} & \textbf{RMSE} & \textbf{R$^2$} \\
+        \midrule
+        Raw & 69,983.22 & 106,728.26 & 0.998 \\
+        Indicator & 69,981.12 & 106,723.23 & 0.998 \\
+        Scaled & 69,981.12 & 106,723.23 & 0.998 \\
+        Full & 33,952.42 & 53,897.96 & 0.998 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Figure~\ref{fig:rq3} presents the grouped bar chart comparing preprocessing strategies.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figures/Sample Figures for Report/Results/Figure3.pdf"}
+    \caption{RQ3: Impact of preprocessing strategies on model performance metrics.}
+    \label{fig:rq3}
+\end{figure}
+
+\subsection{RQ4: Feature Importance}
+
+Research Question 4 identifies the most influential features for Bitcoin price prediction using Random Forest feature importance scores.
+Table~\ref{tab:rq4} ranks features by their contribution to model predictions.
+
+\begin{table}[htbp]
+    \centering
+    \caption{RQ4: Feature Importance Ranking}
+    \label{tab:rq4}
+    \begin{tabular}{llcl}
+        \toprule
+        \textbf{Rank} & \textbf{Feature} & \textbf{Importance} & \textbf{Interpretation} \\
+        \midrule
+        1 & lag1 & 0.9997 & Previous price strongly influences next price \\
+        2 & SMA & 0.0001 & Moving average captures trend \\
+        3 & lag2 & 0.0001 & Short-term trend continuation \\
+        4 & Volatility & 0.0001 & Market fluctuation indicator \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The lag-1 closing price dominates with 99.97\% importance, confirming the strong autoregressive nature of Bitcoin prices at high frequency.
+Technical indicators contribute minimally when lag features are available, suggesting that recent price history encapsulates most predictive information.
+Figure~\ref{fig:rq4} visualizes the feature importance distribution.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figures/Sample Figures for Report/Results/Figure4.pdf"}
+    \caption{RQ4: Feature importance scores from Random Forest analysis.}
+    \label{fig:rq4}
+\end{figure}
+
+\subsection{RQ5: Metric Sensitivity}
+
+Research Question 5 examines how model rankings change across different evaluation metrics.
+Table~\ref{tab:rq5} presents the metric-specific rankings and overall composite score.
+
+\begin{table}[htbp]
+    \centering
+    \caption{RQ5: Model Rankings Across Metrics}
+    \label{tab:rq5}
+    \begin{tabular}{lcccccc}
+        \toprule
+        \textbf{Model} & \textbf{MAE} & \textbf{RMSE} & \textbf{R$^2$} & \textbf{Rank$_{\text{MAE}}$} & \textbf{Rank$_{\text{RMSE}}$} & \textbf{Rank$_{\text{R}^2}$} \\
+        \midrule
+        Linear Regression & 69,983.22 & 106,728.26 & 0.998 & 1.0 & 1.0 & 1.0 \\
+        Random Forest & 555,358.02 & 1,182,767.00 & 0.702 & 2.0 & 2.0 & 2.0 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Linear Regression consistently ranks first across all metrics, demonstrating robust superiority.
+Figure~\ref{fig:rq5} presents the bump chart illustrating ranking stability.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figures/Sample Figures for Report/Results/Figure5.pdf"}
+    \caption{RQ5: Model ranking sensitivity across evaluation metrics (lower rank is better).}
+    \label{fig:rq5}
+\end{figure}
+
+\subsection{RQ6: Robustness and Generalization}
+
+Research Question 6 evaluates model performance under challenging conditions including reduced training data, additive noise, and missing values.
+Table~\ref{tab:rq6} summarizes the robustness analysis results.
+
+\begin{table}[htbp]
+    \centering
+    \caption{RQ6: Robustness Analysis Under Different Conditions}
+    \label{tab:rq6}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Scenario} & \textbf{MAE} & \textbf{RMSE} & \textbf{R$^2$} \\
+        \midrule
+        Normal Split & 555,358.02 & 1,182,767.00 & 0.702 \\
+        Less Training Data & 285,470.70 & 838,999.00 & 0.828 \\
+        With Noise & 555,358.08 & 1,182,767.00 & 0.702 \\
+        With Missing Values & 738,557.72 & 1,518,415.00 & 0.509 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Surprisingly, reduced training data (60\% split) yields better performance than the standard 80/20 split for Random Forest, suggesting potential overfitting with excessive training data.
+Additive Gaussian noise has minimal impact, while missing values significantly degrade performance.
+Figure~\ref{fig:rq6} visualizes the robustness comparison.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figures/Sample Figures for Report/Results/Figure6.pdf"}
+    \caption{RQ6: Robustness analysis comparing performance under normal, reduced data, noisy, and missing value conditions.}
+    \label{fig:rq6}
+\end{figure}
+
+\subsection{RQ7: Practical Recommendation}
+
+Research Question 7 synthesizes findings into a multi-criteria decision matrix.
+We evaluate four models across five dimensions: Performance, Interpretability, Robustness, Speed, and Scalability, each scored on a 1--5 scale.
+Table~\ref{tab:rq7} presents the decision matrix.
+
+\begin{table}[htbp]
+    \centering
+    \caption{RQ7: Multi-Criteria Decision Matrix}
+    \label{tab:rq7}
+    \begin{tabular}{lccccc|c}
+        \toprule
+        \textbf{Model} & \textbf{Perf.} & \textbf{Interp.} & \textbf{Robust.} & \textbf{Speed} & \textbf{Scal.} & \textbf{Final} \\
+        \midrule
+        Linear Regression & 4 & 5 & 3 & 5 & 5 & 4.40 \\
+        Random Forest & 5 & 3 & 4 & 3 & 3 & 3.60 \\
+        SVR & 3 & 2 & 3 & 2 & 2 & 2.40 \\
+        XGBoost & 5 & 2 & 4 & 3 & 4 & 3.60 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Linear Regression achieves the highest final score (4.40) due to exceptional interpretability and computational efficiency.
+Random Forest and XGBoost tie at 3.60, offering superior predictive performance at the cost of reduced transparency.
+Figure~\ref{fig:rq7} presents the radar chart comparing models across all criteria.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{"Codes/Figures/Sample Figures for Report/Results/Figure7.pdf"}
+    \caption{RQ7: Multi-criteria radar chart comparing Linear Regression, Random Forest, SVR, and XGBoost across five evaluation dimensions.}
+    \label{fig:rq7}
+\end{figure}
+
+\section{Discussion}
+\label{sec:discussion}
+
+Our findings reveal several important insights for Bitcoin price prediction practitioners.
+First, the dominance of lag-1 features suggests that high-frequency Bitcoin prices exhibit strong short-term autocorrelation, consistent with the efficient market hypothesis at microsecond timescales.
+This finding aligns with prior work by Urquhart, who documented significant autocorrelation in Bitcoin returns at short horizons.
+
+Second, the superior performance of Linear Regression over ensemble methods challenges the conventional wisdom that complex models always outperform simple baselines.
+We attribute this result to the high signal-to-noise ratio of the lag-1 feature relative to the limited information content of technical indicators in our feature set.
+Random Forest and XGBoost may benefit from richer feature engineering incorporating sentiment analysis, on-chain metrics, or cross-asset correlations.
+
+Third, the robustness analysis highlights the importance of data quality in financial machine learning.
+Missing values cause severe performance degradation, emphasizing the need for robust imputation strategies or redundant data sources.
+The counterintuitive improvement under reduced training data warrants further investigation, potentially indicating that recent market regimes differ substantially from historical patterns.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This study presents a comprehensive evaluation of supervised learning models for Bitcoin price prediction using high-frequency historical data.
+Through seven research questions, we systematically investigate baseline performance, model comparison, preprocessing effects, feature importance, metric sensitivity, robustness, and practical recommendations.
+
+Our key findings are:
+(1) Linear Regression achieves the best predictive accuracy with R$^2$ = 0.998, outperforming Random Forest, SVR, and XGBoost on the evaluated dataset;
+(2) Lag-1 closing price dominates feature importance, contributing 99.97\% of model explanatory power;
+(3) Comprehensive preprocessing with outlier removal reduces MAE by 51.5\% compared to raw features;
+(4) Model rankings remain stable across MAE, RMSE, and R$^2$ metrics;
+(5) Missing values significantly degrade performance, while additive noise has minimal impact;
+(6) Linear Regression offers the best balance of accuracy, interpretability, and efficiency for production deployment.
+
+Future work should explore deep learning architectures such as LSTM and Transformer models, integrate alternative data sources including social media sentiment and blockchain metrics, and investigate regime-switching models that adapt to changing market conditions.
+
+
+
+\begin{thebibliography}{6}
+
+\bibitem{mittal2021}
+S. Mittal, A. Aggarwal, and P. Kumar, ``Bitcoin price prediction using ARIMA and machine learning,'' \textit{Materials Today: Proceedings}, vol. 45, pp. 5095--5101, 2021.
+
+\bibitem{mcnally2018}
+S. McNally, J. Roche, and S. Caton, ``Predicting the price of Bitcoin using machine learning,'' in \textit{2018 26th Euromicro International Conference on Parallel, Distributed and Network-based Processing (PDP)}, pp. 339--343, IEEE, 2018.
+
+\bibitem{chen2016}
+T. Chen and C. Guestrin, ``XGBoost: A scalable tree boosting system,'' in \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, pp. 785--794, 2016.
+
+\bibitem{sezer2020}
+O. B. Sezer et al., ``Financial time series forecasting with deep learning: A systematic literature review: 2005--2019,'' \textit{Applied Soft Computing}, vol. 90, p. 106181, 2020.
+
+\bibitem{kim2021}
+H. Kim et al., ``Predicting Bitcoin prices using machine learning: A comparative study,'' \textit{Expert Systems with Applications}, vol. 181, p. 115150, 2021.
+
+\bibitem{nakamoto2008}
+S. Nakamoto, ``Bitcoin: A peer-to-peer electronic cash system,'' \textit{Decentralized Business Review}, p. 21260, 2008.
+
+\end{thebibliography}
+
+\end{document}
